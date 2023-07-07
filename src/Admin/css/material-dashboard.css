@@ -161,6 +161,9 @@
   margin-top: 20px;
   
 }
+#col_1{
+  margin-left: -25% !important;
+}
 
 /* table of barbershop */
 
@@ -2926,6 +2929,7 @@ hr.horizontal.gray-light {
     padding: 0;
     box-shadow: none;
   }
+
   .text-header{
     color:white;  }
 

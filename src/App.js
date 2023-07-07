@@ -19,6 +19,8 @@ import Client from './Admin/Components/Client';
 import Notification from './Admin/Components/Notification';
 import UpdateProfile from './Components/UpdateProfile';
 import BarberShop from './Admin/Components/BarberShop';
+import RegisterBarbershopForm from './Components/BarBerShop';
+
 
 function App() {
   const HAFValue = localStorage.getItem('setHeaderAndFooterHomePage');
@@ -56,6 +58,8 @@ function App() {
           <Route path="/Income" element={<Income />} />
           <Route path="/Client" element={<Client />} />
           <Route path="/Notification" element={<Notification />} />
+          <Route path="/RegisterFrom" element={<RegisterBarbershopForm />} />
+
         </Routes>
         {!hideHeaderFooterHomePage && <Footer />}
 
