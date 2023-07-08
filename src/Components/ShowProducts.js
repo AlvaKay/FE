@@ -22,6 +22,7 @@ const ShowProducts = () => {
   // const [isStylistBooked, setIsStylistBooked] = useState(false);
   const [stylistAvailability, setStylistAvailability] = useState({});
   const [searchResults, setSearchResults] = useState([]);
+  
 
   const fetchDataold = async () => {
     try {
@@ -87,7 +88,8 @@ const ShowProducts = () => {
     setIsDataComplete(selectedTime !== null && selectedStylist !== null);
   }, [selectedTime, selectedStylist]);
 
-  const handleConfirm = async () => {
+  const handlePayment = async () => {
+    
     if (!selectedTime) {
       Swal.fire("Lỗi", "Vui lòng chọn thời gian.", "error");
       return;
@@ -110,6 +112,7 @@ const ShowProducts = () => {
 
     // Tiếp tục xử lý khi stylist khả dụng
     Swal.fire("Thành công", "Đặt lịch thành công", "success");
+
     handleModalClose();
 
     if (selectedShop && selectedShop.service) {
@@ -133,7 +136,13 @@ const ShowProducts = () => {
         appointment_time: formattedTime,
         appointment_date: formattedDate,
         stylist_id: selectedStylist,
+        
       };
+      const postData = await axios.post(
+        "http://127.0.0.1:8000/api/bookingservices",productData 
+
+        
+      );
 
       try {
         // Get the existing product data from sessionStorage
@@ -153,11 +162,39 @@ const ShowProducts = () => {
           "productData",
           JSON.stringify(updatedProductData)
         );
+        if (selectedShop) {
+          const totalPrice = selectedShop.service.service_price;
+          axios.post(`http://localhost:8000/api/payment-vnpay/${totalPrice}`).then(res => {
+            if (res.data.code === '00') {
+              var url = res.data.data;
+                  Swal.fire("Thành công", "Đặt lịch thành công", "success");
+    
+              window.open(url,'_blank');
+            }
+          });
+          console.log(totalPrice);
+        }
+      
       } catch (error) {
         console.error("Error updating product data:", error);
       }
     }
   };
+
+  // const handlePayment = () => {
+  //   if (selectedShop) {
+  //     const totalPrice = selectedShop.service.service_price;
+  //     axios.post(`http://localhost:8000/api/payment-vnpay/${totalPrice}`).then(res => {
+  //       if (res.data.code === '00') {
+  //         var url = res.data.data;
+  //             Swal.fire("Thành công", "Đặt lịch thành công", "success");
+
+  //         window.open(url,'_blank');
+  //       }
+  //     });
+  //     console.log(totalPrice);
+  //   }
+  // };
 
   const customModalStyles = {
     content: {
@@ -225,6 +262,7 @@ const ShowProducts = () => {
       return false;
     }
   };
+
 
   return (
     <>
@@ -403,9 +441,9 @@ const ShowProducts = () => {
         />
         <br></br>
         <br></br>
-        <button onClick={handleConfirm} className="btn btn-primary">
-          Xác nhận
-        </button>
+       
+        <button  className="btn btn-primary" onClick={() => handlePayment()}>Thanh toán</button>
+
       </Modal>
     </>
   );
