@@ -279,6 +279,9 @@
   .ms-md-auto {
     margin-left: auto !important;
   }
+  #Cardadmin1{
+    width:70% !important;
+  }
 
  
 
@@ -296,6 +299,10 @@
   .card{
     margin-top: 3% !important;
     margin-left: 25% !important;
+  }
+  #container1{
+    width:80% !important;
+    margin-left:13% !important;
   }
 
 }

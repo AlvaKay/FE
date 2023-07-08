@@ -44,8 +44,7 @@ if(confirmed){
 
     <div className="g-sidenav-show bg-gray-200">
     <main className="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
-      <div className="containe
-      r-fluid py-4">
+      <div className="container-fluid py-4" id="container1">
         <div className="row justify-content-center">
           {shops.map(shop => (
             <div key={shop.shop_id} className="col-lg-4">

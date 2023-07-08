@@ -69,7 +69,7 @@ const BarberShop = () => {
           <div className="row justify-content-center" id="barberrow">
             {ratings.map(rating => (
               <div key={rating.rating_id} className="col-lg-4">
-                <div className="card">
+                <div className="card" >
                   <div className="card-body">
                     <h5 className="card-title">{rating.shop_name}</h5>
                     <img src={rating.shop_image} alt="ShopImage" className="card-img" />
