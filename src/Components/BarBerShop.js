@@ -200,15 +200,6 @@ const RegisterBarbershopForm = () => {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="shopEmail">Email:</label>
-                <input
-                  type="email"
-                  id="shopEmail"
-                  value={shopEmail}
-                  onChange={(e) => setShopEmail(e.target.value)}
-                />
-              </div>
-              <div className="form-group">
                 <label htmlFor="shopEmail">Shop Address:</label>
                 <input
                   type="address"

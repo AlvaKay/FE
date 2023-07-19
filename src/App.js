@@ -20,7 +20,7 @@ import Notification from './Admin/Components/Notification';
 import UpdateProfile from './Components/UpdateProfile';
 import BarberShop from './Admin/Components/BarberShop';
 import RegisterBarbershopForm from './Components/BarBerShop';
-
+import BookingDetail from './Components/BookingDetail';
 
 function App() {
   const HAFValue = localStorage.getItem('setHeaderAndFooterHomePage');
@@ -59,6 +59,7 @@ function App() {
           <Route path="/Client" element={<Client />} />
           <Route path="/Notification" element={<Notification />} />
           <Route path="/RegisterFrom" element={<RegisterBarbershopForm />} />
+          <Route path="/booking/:historyId" element={<BookingDetail/>} />
 
         </Routes>
         {!hideHeaderFooterHomePage && <Footer />}

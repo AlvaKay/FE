@@ -1,290 +1,177 @@
 import React, { useState, useEffect } from 'react';
-import { format, parse } from 'date-fns';
-
+import { format } from 'date-fns';
 import Modal from 'react-modal';
+import Swal from 'sweetalert2';
 
 const Adminshop = () => {
-  const [payments, setPayments] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modelOpen, setModelOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState('');
-  const [selectedYear, setSelectedYear] = useState('');
-  const [selectedDay, setSelectedDay] = useState('');
-  const [userData, setUserData] = useState(null);
+  const [stylists, setStylists] = useState([]);
+  const [isModalOpenAdd, setIsModalOpenAdd] = useState(false);
+  const [stylistName, setStylistName] = useState('');
+  const [stylistImage, setStylistImage] = useState('');
+
+  const userID = localStorage.getItem('userID');
 
   useEffect(() => {
-    // Lấy dữ liệu từ localStorage
-    const data = localStorage.getItem('userID');
-    if (data) {
-      const parsedData = JSON.parse(data);
-      setUserData(parsedData);
-    }
-  }, []);
+    fetch(`http://127.0.0.1:8000/api/stylist/${userID}`)
+      .then(response => response.json())
+      .then(data => setStylists(data));
+  }, [userID]);
 
-  useEffect(() => {
-    let isMounted = true; // Biến để kiểm tra xem component đã mount hay chưa
+  const openModalAdd = () => {
+    setIsModalOpenAdd(true);
+  };
 
-    const fetchData = async () => {
-      try {
-        const url1 = new URL('http://127.0.0.1:8000/api/get-payments');
-        url1.searchParams.append('userID', userData.userId);
+  const closeModalAdd = () => {
+    setIsModalOpenAdd(false);
+  };
 
-        const response1 = await fetch(url1);
-        const data1 = await response1.json();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-        if (isMounted) {
-          setPayments(data1);
-        }
+    fetch('http://127.0.0.1:8000/api/addstylist', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        stylistName,
+        stylistImage,
+        user_id: userID,
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
 
-        const url2 = new URL('http://127.0.0.1:8000/api/get-payment');
-        url2.searchParams.append('userID', userData.userId);
-
-        const response2 = await fetch(url2);
-        const data2 = await response2.json();
-
-        if (isMounted) {
-          setPayments(data2);
-        }
-      } catch (error) {
+        setStylistName('');
+        setStylistImage('');
+        setIsModalOpenAdd(false);
+        Swal.fire('Success', 'Stylist added successfully!', 'success');
+      })
+      .catch(error => {
         console.error(error);
+        Swal.fire('Error', 'Failed to add stylist', 'error');
+      });
+  };
+// Xóa stylist
+  const handleDelete = (stylist_id) => {
+    Swal.fire({
+      title: 'Xác nhận xóa stylist',
+      text: `Bạn có chắc chắn muốn xóa stylist này không?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy',
+      reverseButtons: true,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`http://localhost:8000/api/stylists/${userID}/${stylist_id}`, {
+          method: 'DELETE',
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data);
+            Swal.fire('Thành công', 'Stylist đã được xóa thành công', 'success');
+            // Refresh stylists list
+            fetch(`http://127.0.0.1:8000/api/stylist/${userID}`)
+              .then(response => response.json())
+              .then(data => setStylists(data));
+          })
+          .catch(error => {
+            console.error(error);
+            Swal.fire(
+              'Lỗi',
+              'Xóa stylist thất bại. Vui lòng liên hệ Admin Website để biết thêm chi tiết',
+              'error'
+            );
+          });
       }
-    };
-
-    fetchData();
-
-    // Cleanup function để kiểm tra xem component đã unmount hay chưa
-    return () => {
-      isMounted = false;
-    };
-  }, [userData]);
-
-  const openModal = (payment) => {
-    setSelectedPayment(payment);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const openModel = () => {
-    setModelOpen(true);
-  };
-
-  const closeModel = () => {
-    setModelOpen(false);
-  };
-
-  const filteredPayments = payments.filter((p) => {
-    const paymentDate = new Date(p.created_at);
-
-    if (selectedPayment?.shop_id) {
-      if (selectedDay && selectedMonth && selectedYear) {
-        const selectedDate = new Date(selectedYear, selectedMonth - 1, selectedDay);
-        return (
-          p.shop_id === selectedPayment.shop_id &&
-          paymentDate.toDateString() === selectedDate.toDateString()
-        );
-      } else if (selectedMonth && selectedYear) {
-        const selectedDate = new Date(selectedYear, selectedMonth - 1);
-        return (
-          p.shop_id === selectedPayment.shop_id &&
-          paymentDate.getMonth() === selectedDate.getMonth() &&
-          paymentDate.getFullYear() === selectedDate.getFullYear()
-        );
-      } else if (selectedDay) {
-        return (
-          p.shop_id === selectedPayment.shop_id &&
-          paymentDate.getDate() === parseInt(selectedDay)
-        );
-      } else {
-        return p.shop_id === selectedPayment.shop_id;
-      }
-    } else if (selectedDay && selectedMonth && selectedYear) {
-      const selectedDate = new Date(selectedYear, selectedMonth - 1, selectedDay);
-      return paymentDate.toDateString() === selectedDate.toDateString();
-    } else if (selectedMonth && selectedYear) {
-      const selectedDate = new Date(selectedYear, selectedMonth - 1);
-      return (
-        paymentDate.getMonth() === selectedDate.getMonth() &&
-        paymentDate.getFullYear() === selectedDate.getFullYear()
-      );
-    } else if (selectedDay) {
-      return paymentDate.getDate() === parseInt(selectedDay);
-    } else {
-      return true;
-    }
-  });
-
-  const handleDayChange = (e) => {
-    setSelectedDay(e.target.value);
-  };
-
-  const handleMonthChange = (e) => {
-    setSelectedMonth(e.target.value);
-  };
-
-  const handleYearChange = (e) => {
-    setSelectedYear(e.target.value);
+    });
   };
 
   return (
     <div>
-      <h2 style={{ width: '10%' }}>Thống kê hóa đơn</h2>
-      <button onClick={openModel} style={{ width: '10%' }}>
-        Detail
-      </button>
+      <div className='row'>
+        <div className='col-lg-12'>
+          <div>
+            <h2 style={{ marginTop: '10%' }}>Thông tin Stylist</h2>
+            <button className="add-stylist-button" style={{ width: "20%" ,background:"#212529"}} onClick={openModalAdd}>Add Stylist</button>
+            <table style={{ width: "100%" }}>
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Stylist Name</th>
+                  <th>Stylist Image</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stylists.map((stylist, index) => (
+                  <tr key={stylist.stylist_id}>
+                    <td>{index + 1}</td>
+                    <td>{stylist.stylist_name}</td>
+                    <td>{stylist.stylist_image}</td>
+                    <td>
+                      <button
+                        style={{ width: "25%", backgroundColor: "#D19F68", color: "white" ,textAlign:"center"}}
+                        onClick={() => handleDelete(stylist.stylist_id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      <Modal
-        style={{
-          content: {
-            marginLeft: '40%',
-            marginTop: '10%',
-            transform: 'translateX(-38%)',
-            width: '30%',
-            height: '50%'
-          },
-        }}
-        isOpen={modelOpen}
-        onRequestClose={closeModel}
-        contentLabel="Payment Detail Modal"
-      >
-        <div className="g-sidenav-show bg-gray-200">
-          <main className="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
-            <div className="container-fluid py-4">
-              <div className="row">
-                <div className="col-lg-12" id="col_1">
-                  <div className="card h-100">
-                    <div className="card-header pb-0">
-                      <h6>Thống kê thu nhập của BarBerShop</h6>
-                    </div>
-                    <div className="card-body p-3">
-                      <table id="table">
-                        <thead>
-                          <tr>
-                            <th>Shop Name</th>
-                            <th>Shop Image</th>
-                            <th>Payment Amount</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {payments.map((payment) => (
-                            <tr key={payment.payment_id}>
-                              <td>{payment.shop_name}</td>
-                              <td>{payment.shop_image}</td>
-                              <td>{payment.total_amount}</td>
-                              <td>
-                                <button onClick={() => openModal(payment)}>Detail</button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <Modal
-                style={{
-                  content: {
-                    marginLeft: '40%',
-                    marginTop: '10%',
-                    transform: 'translateX(-38%)',
-                    width: '30%',
-                    height: '50%'
-                  },
-                }}
-                isOpen={isModalOpen}
-                onRequestClose={closeModal}
-                contentLabel="Payment Detail Modal"
-              >
-                {selectedPayment && (
-                  <div className="container-fluid py-4">
-                    <div className="row">
-                      <div className="col-lg-12">
-                        <div
-                          className="cardBaber h-100"
-                          style={{ width: '100%', marginLeft: '0%' }}
-                        >
-                          <div className="card-header pb-0">
-                            <h6>Thống kê thu nhập của {selectedPayment.shop_name}</h6>
-                          </div>
-                          <div>
-                            <label htmlFor="daySelect">Ngày:</label>
-                            <select id="daySelect" value={selectedDay} onChange={handleDayChange}>
+          <Modal
+  isOpen={isModalOpenAdd}
+  onRequestClose={closeModalAdd}
+  contentLabel="Add Stylist Modal"
+  style={{
+    overlay: {
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    content: {
+      width: '400px',
+      margin: 'auto',
+      borderRadius: '4px',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+    },
+  }}
+>
+  <div>
+    <h3>Thêm nhà tạo mẫu</h3>
+    <form onSubmit={handleSubmit}>
+      <label>
+        Stylist Name:
+        <input
+          type="text"
+          name="stylistName"
+          value={stylistName}
+          onChange={(e) => setStylistName(e.target.value)}
+        />
+      </label>
+      <br />
+      <label>
+        Stylist Image:
+        <input
+          type="text"
+          name="stylistImage"
+          value={stylistImage}
+          onChange={(e) => setStylistImage(e.target.value)}
+        />
+      </label>
+      <br />
+      <button type="submit">Submit</button>
+      <button onClick={closeModalAdd}>Close</button>
+    </form>
+  </div>
+</Modal>
 
-                              <option value="">Tất cả</option>
-                              {Array.from(Array(31), (_, index) => (
-                                <option key={index + 1} value={index + 1}>
-                                  Mùng {index + 1}
-                                </option>
-                              ))}
-                            </select>
-                            <label htmlFor="monthSelect">Tháng:</label>
-                            <select
-                              id="monthSelect"
-                              value={selectedMonth}
-                              onChange={handleMonthChange}
-                            >
-                              <option value="">Tất cả</option>
-                              {Array.from(Array(12), (_, index) => (
-                                <option key={index + 1} value={index + 1}>
-                                  Tháng {index + 1}
-                                </option>
-                              ))}
-                            </select>
-                            <label htmlFor="yearSelect">Năm:</label>
-                            <select
-                              id="yearSelect"
-                              value={selectedYear}
-                              onChange={handleYearChange}
-                            >
-                              <option value="">Tất cả</option>
-                              {Array.from(Array(10), (_, index) => (
-                                <option key={index + 2023} value={index + 2023}>
-                                  {index + 2023}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <table id="table">
-                            <thead>
-                              <tr>
-                                <th>User Name</th>
-                                <th>Payment Amount</th>
-                                <th>Payment Date</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {filteredPayments.map((payment) => (
-                                <tr key={payment.payment_id}>
-                                  <td>{payment.user_name}</td>
-                                  <td>{payment.payment_amount}</td>
-                                  <td>{format(new Date(payment.created_at), 'dd/MM/yyyy HH:mm')}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-
-                          <button className="modal-close-button" onClick={closeModal}>
-                            Close
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </Modal>
-            </div>
-          </main>
         </div>
-        <button className="modal-close-button" onClick={closeModal}>
-          Close
-        </button>
-      </Modal>
+      </div>
     </div>
   );
 };

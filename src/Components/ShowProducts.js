@@ -105,10 +105,7 @@ const ShowProducts = () => {
       selectedDateTime
     );
 
-    if (!isStylistAvailable) {
-      Swal.fire("Lỗi", "Stylist đã được đặt lịch vào thời gian này.", "error");
-      return;
-    }
+ 
 
     // Tiếp tục xử lý khi stylist khả dụng
     Swal.fire("Thành công", "Đặt lịch thành công", "success");
